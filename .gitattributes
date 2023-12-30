@@ -1,6 +1,11 @@
 ###############################################################################
 # Set default behavior to automatically normalize line endings.
 ###############################################################################
+
+# Set specific line endings behavior for these files
+BandTree.Server/dbschema/default.esdl text eol=lf
+BandTree.Server/edgedb.toml text eol=lf
+
 * text=auto
 
 ###############################################################################
