@@ -3,7 +3,11 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-BandTree.Cache/
+# when I use a dot . in the directory name git .ignore does not work
+# Using a backslash didn't help either
+BandTree\.Cache/
+# I juse renamed directory to have an underscore instead of a dot.
+BandTree_Cache/
 *.lnk
 
 # User-specific files
