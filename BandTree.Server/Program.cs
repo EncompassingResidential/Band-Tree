@@ -6,6 +6,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient(); // Add HttpClient support - talking to Wikipedia API
 
 var app = builder.Build();
 
@@ -50,7 +51,35 @@ app.MapGet("/", () =>
     return $"Hello World! John back from Hawaii {formattedDateTime} Local Date & Time";
 });
 
+/*
+ * Band Tree endpoint is 
+ * https://localhost:7100/wikipedia-search?searchTerm=Microsoft
+ * 
+ * which is then calling the Wikipedia API with
+ * https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=band%20journey&format=json
+ */
+app.MapPut("/wikipedia-search", async (string searchTerm, IHttpClientFactory clientFactory) =>
+{
+    if (string.IsNullOrWhiteSpace(searchTerm))
+    {
+        return Results.BadRequest("Search term is required.");
+    }
 
+    var client = clientFactory.CreateClient();
+    var wikiApiUrl = $"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={Uri.EscapeDataString(searchTerm)}&format=json";
+
+    try
+    {
+        var response = await client.GetAsync(wikiApiUrl);
+        response.EnsureSuccessStatusCode();
+        var data = await response.Content.ReadAsStringAsync();
+        return Results.Content(data, "application/json");
+    }
+    catch (HttpRequestException e)
+    {
+        return Results.Problem($"Error calling Wikipedia API: {e.Message}");
+    }
+});
 
 
 app.MapControllers();
