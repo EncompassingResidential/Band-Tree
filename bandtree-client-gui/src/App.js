@@ -18,7 +18,7 @@ function App() {
         >
           Learn React John again here it is 1/02/2024 14:52
         </a>
-        John Text 15:16 <WikipediaSearch />
+        John Text @ 15:16 <WikipediaSearch />
       </header>
     </div>
   );

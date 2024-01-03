@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 
 function WikipediaSearch() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [results, setResults] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm]           = useState('');
+  const [results, setResults]                 = useState('');
+  const [isLoading, setIsLoading]             = useState(false);
+  const [error, setError]                     = useState(null);
+  const [displayedApiUrl, setDisplayedApiUrl] = useState('');
 
   const handleSearch = () => {
     if (!searchTerm) {
@@ -12,17 +13,28 @@ function WikipediaSearch() {
       return;
     }
 
-    //              https://localhost:7088
-    const apiUrl = `https://localhost:7088/wikipedia-search?search=${searchTerm}`;
+    //              https://localhost:7088/wikipedia-search?searchTerm=aldo%20nova
+    const encodedSearchTerm = encodeURIComponent(searchTerm);
+    const apiUrl = `https://localhost:7088/wikipedia-search?searchTerm=${encodedSearchTerm}`;
 
+    // Display the apiUrl before sending the request
+    setDisplayedApiUrl(apiUrl);
     
     // Indicate that a request is in progress
     setIsLoading(true);
 
-    fetch(apiUrl)
+    fetch(apiUrl, {
+      method: 'PUT', // Specify the HTTP method as PUT
+      headers: {
+        'Content-Type': 'application/json', // Set the content type if you are sending JSON data
+        // Add any other headers as needed
+      }
+      // ,
+      // body: JSON.stringify(sendBodyData), // Include the request payload if necessary
+    })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Band Client calling Band Server HTTP error! Status: ${response.status}`);
+          throw new Error(`Band Client HTTP error calling Band Server! Used URL ${apiUrl} Status: ${response.status}`);
         }
         return response.json();
       })
@@ -34,13 +46,21 @@ function WikipediaSearch() {
         setError(null); // Clear any previous errors
       })
       .catch((error) => {
-        console.error('Unknown Band Client to Band Server Error: ', error);
+        console.error('.catch Unknown Band Client to Band Server Error: ', error);
         // Set the error state to display a message to the user
+        // If the error is "TypeError: NetworkError when attempting to fetch resource."
+        // then the Band Server is not running is one possible reason.
         setError(
           <>
-            Band Client: An error occurred while fetching data from Band Server.
+            Band Client: .catch error occurred while trying to fetch information from the Band Server.
             <br />
-            {error.toString()}
+            with search term: {searchTerm}
+            <br />
+            and apiUrl: {apiUrl}
+            <br />
+            <br />
+            ( {error.toString()} )
+            <br />
           </>
         );
         
@@ -51,7 +71,8 @@ function WikipediaSearch() {
 
   return (
     <div>
-      <h1>Wikipedia Search</h1>
+      <h1>Musician Family Tree Search via ! Wikipedia !</h1>
+      <h2>version 1/02/2024 18:44</h2>
       <div>
         <input
           type="text"
@@ -62,21 +83,28 @@ function WikipediaSearch() {
         <button onClick={handleSearch}>Search if Artist or Band exists in English WikiPedia</button>
       </div>
       <div>
-      {isLoading ? (
-          <p>Loading...</p>
-        ) : error ? (
-          <p>{error}</p>
-        ) : (
-          <>
-            <h2>Results</h2>
-            <textarea
-              rows="10"
-              cols="50"
-              value={results}
-              readOnly
-            />
-          </>
-        )}
+        {displayedApiUrl && (
+            <p>
+              Band Client URL Request sent to Band Server:
+              <br />
+               <code>{displayedApiUrl}</code>
+            </p>
+          )}
+          {isLoading ? (
+            <p>Loading...</p>
+          ) : error ? (
+            <p>{error}</p>
+          ) : (
+            <>
+              <h2>Raw JSON Results via Band Server from Wikipedia</h2>
+              <textarea
+                rows="25"
+                cols="150"
+                value={results}
+                readOnly
+              />
+            </>
+          )}
       </div>
     </div>
   );
