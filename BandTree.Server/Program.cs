@@ -8,6 +8,15 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient(); // Add HttpClient support - talking to Wikipedia API
 
+// Deals with CORS - Cross Origin Resource Sharing
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        builder => builder.WithOrigins("http://localhost:3000") // Specify the exact origin of your React app
+                          .AllowAnyHeader()
+                          .AllowAnyMethod());
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -41,6 +50,10 @@ app.UseHttpsRedirection();
  * 
  */
 app.UseAuthorization();
+
+// Configure the HTTP request pipeline.
+// Deals with CORS - Cross Origin Resource Sharing
+app.UseCors("AllowSpecificOrigin"); // Use the policy
 
 // https://localhost:7100/
 // returns Hello World!
