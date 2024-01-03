@@ -15,7 +15,7 @@ function WikipediaSearch() {
 
     //              https://localhost:7088/wikipedia-search?searchTerm=aldo%20nova
     const encodedSearchTerm = encodeURIComponent(searchTerm);
-    const apiUrl = `/wikipedia-search?searchTerm=${encodedSearchTerm}`;
+    const apiUrl = `https://localhost:7088/wikipedia-search?searchTerm=${encodedSearchTerm}`;
 
     // Display the apiUrl before sending the request
     setDisplayedApiUrl(apiUrl);
@@ -34,7 +34,7 @@ function WikipediaSearch() {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Band Client calling Band Server HTTP error! Used URL ${apiUrl} Status: ${response.status}`);
+          throw new Error(`Band Client HTTP error calling Band Server! Used URL ${apiUrl} Status: ${response.status}`);
         }
         return response.json();
       })
@@ -46,8 +46,10 @@ function WikipediaSearch() {
         setError(null); // Clear any previous errors
       })
       .catch((error) => {
-        console.error('Unknown Band Client to Band Server Error: ', error);
+        console.error('.catch Unknown Band Client to Band Server Error: ', error);
         // Set the error state to display a message to the user
+        // If the error is "TypeError: NetworkError when attempting to fetch resource."
+        // then the Band Server is not running is one possible reason.
         setError(
           <>
             Band Client: .catch error occurred while trying to fetch information from the Band Server.
@@ -57,7 +59,7 @@ function WikipediaSearch() {
             and apiUrl: {apiUrl}
             <br />
             <br />
-            {error.toString()}
+            ( {error.toString()} )
             <br />
           </>
         );
@@ -70,6 +72,7 @@ function WikipediaSearch() {
   return (
     <div>
       <h1>Musician Family Tree Search via ! Wikipedia !</h1>
+      <h2>version 1/02/2024 18:44</h2>
       <div>
         <input
           type="text"
@@ -82,7 +85,9 @@ function WikipediaSearch() {
       <div>
         {displayedApiUrl && (
             <p>
-              Band Client Request URL: <code>{displayedApiUrl}</code>
+              Band Client URL Request sent to Band Server:
+              <br />
+               <code>{displayedApiUrl}</code>
             </p>
           )}
           {isLoading ? (
@@ -91,10 +96,10 @@ function WikipediaSearch() {
             <p>{error}</p>
           ) : (
             <>
-              <h2>Results</h2>
+              <h2>Raw JSON Results via Band Server from Wikipedia</h2>
               <textarea
-                rows="10"
-                cols="50"
+                rows="25"
+                cols="150"
                 value={results}
                 readOnly
               />
