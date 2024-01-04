@@ -31,7 +31,7 @@ function SearchWikiResultsList({ searchWikiResults }) {
 
     // Ensure searchWikiResults is an array
     if (!Array.isArray(searchWikiResults.search)) {
-        return <p>No results found.</p>;
+        return <p>Wikipedia or Band Server did not send a properly formatted JSON structure.</p>;
     }
 
     return (
@@ -45,14 +45,28 @@ function SearchWikiResultsList({ searchWikiResults }) {
                 </tr>
             </thead>
             <tbody>
-                {searchWikiResults.search.map((result, arrayindex) => (
+                {searchWikiResults.search && searchWikiResults.search.length > 0 ? 
+                    (  searchWikiResults.search.map((result, arrayindex) => (
                     <tr key={arrayindex}> {/* Ideally, use a unique identifier instead of index */}
                     <td>{result.pageid}</td>
                     <td>{result.title}</td>
                     <td dangerouslySetInnerHTML={{ __html: result.snippet }}></td>
                     <td>{result.timestamp}</td>
                 </tr>
-                ))}
+                    ))
+                ) : (
+                    <>
+                    <tr>
+                    <td colSpan={4}>     Sigh.</td>
+                    </tr>
+                    <tr>
+                        <td colSpan={4}>No Wikiepedia</td><td>Keep searching for that artist,</td>
+                    </tr>
+                    <tr>
+						<td colSpan={4}> results found.</td><td>maybe with a different spelling...</td>
+					</tr>
+                    </>
+                        )}
             </tbody>
         </table>
     );
