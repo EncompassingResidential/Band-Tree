@@ -6,6 +6,7 @@ function WikipediaSearch() {
   const [isLoading, setIsLoading]             = useState(false);
   const [error, setError]                     = useState(null);
   const [displayedApiUrl, setDisplayedApiUrl] = useState('');
+  const [showJSONResults, setShowResults]     = useState(false);
 
   const handleSearch = () => {
     if (!searchTerm) {
@@ -69,10 +70,15 @@ function WikipediaSearch() {
       });
   };
 
+  const toggleResultsVisibility = () => {
+    setShowResults(!showJSONResults); // Toggle between true and false
+  };
+  
+
   return (
     <div>
       <h1>Musician Family Tree Search via ! Wikipedia !</h1>
-      <h2>version 1/02/2024 18:44</h2>
+      <h2>version Wed, 01/03/2024 15:41</h2>
       <div>
         <input
           type="text"
@@ -90,11 +96,14 @@ function WikipediaSearch() {
                <code>{displayedApiUrl}</code>
             </p>
           )}
+          <button onClick={toggleResultsVisibility}>
+            {showJSONResults ? "Hide Results" : "Show Results"}
+          </button>
           {isLoading ? (
             <p>Loading...</p>
           ) : error ? (
             <p>{error}</p>
-          ) : (
+          ) : showJSONResults && (
             <>
               <h2>Raw JSON Results via Band Server from Wikipedia</h2>
               <textarea
