@@ -25,7 +25,7 @@ function WikipediaSearch({ onResultsFetched }) {
     setIsLoading(true);
 
     fetch(apiUrl, {
-      method: 'PUT', // Specify the HTTP method as PUT
+      method: 'GET', // Specify the HTTP method as GET since no data on the server is being modified
       headers: {
         'Content-Type': 'application/json', // Set the content type if you are sending JSON data
         // Add any other headers as needed
