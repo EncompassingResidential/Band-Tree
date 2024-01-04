@@ -54,7 +54,7 @@ function SearchWikiResultsList({ searchWikiResults }) {
                     <td>{result.timestamp}</td>
                 </tr>
                     ))
-                ) : (
+                ) : ( {/* No results found - default rows */}
                     <>
                     <tr>
                     <td colSpan={4}>     Sigh.</td>
