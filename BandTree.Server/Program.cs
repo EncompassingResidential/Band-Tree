@@ -71,7 +71,7 @@ app.MapGet("/", () =>
  * which is then calling the Wikipedia API with
  * https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=band%20journey&format=json
  */
-app.MapPut("/wikipedia-search", async (string searchTerm, IHttpClientFactory clientFactory) =>
+app.MapGet("/wikipedia-search", async (string searchTerm, IHttpClientFactory clientFactory) =>
 {
     if (string.IsNullOrWhiteSpace(searchTerm))
     {
