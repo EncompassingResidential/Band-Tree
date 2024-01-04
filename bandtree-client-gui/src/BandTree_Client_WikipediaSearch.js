@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function WikipediaSearch() {
+function WikipediaSearch({ onResultsFetched }) {
   const [searchTerm, setSearchTerm]           = useState('');
   const [results, setResults]                 = useState('');
   const [isLoading, setIsLoading]             = useState(false);
@@ -42,6 +42,8 @@ function WikipediaSearch() {
       .then((data) => {
         // Display the raw JSON response in the results text field
         setResults(JSON.stringify(data, null, 2));
+        // After fetching data:
+        onResultsFetched(data.query);
         // Indicate that the request is complete
         setIsLoading(false);
         setError(null); // Clear any previous errors
@@ -97,7 +99,7 @@ function WikipediaSearch() {
             </p>
           )}
           <button onClick={toggleResultsVisibility}>
-            {showJSONResults ? "Hide Results" : "Show Results"}
+            {showJSONResults ? "Hide JSON Search Results" : "Show JSON Search Results"}
           </button>
           {isLoading ? (
             <p>Loading...</p>
