@@ -1,3 +1,15 @@
+/*
+ * My current versions on 01/04/2024 are:
+ * C# version 9.0
+ * Language 11.0
+ * Using .NET 7
+ * MinimalAPIs
+ */
+
+using BandTree.Server.Services;
+using BandTree.Server.Model;
+using Microsoft.AspNetCore.Mvc;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -66,7 +78,7 @@ app.MapGet("/", () =>
 
 /*
  * Band Tree endpoint is 
- * https://localhost:7100/wikipedia-search?searchTerm=Microsoft
+ * https://localhost:7088/wikipedia-search?searchTerm=Microsoft
  * 
  * which is then calling the Wikipedia API with
  * https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=band%20journey&format=json
@@ -95,6 +107,67 @@ app.MapGet("/wikipedia-search", async (string searchTerm, IHttpClientFactory cli
 });
 
 
+/* 
+ * PUT  Get the Band, Artist, Group (BAG) Wikiepedia Page
+ *     using a PUT 
+ *     because the Artist will be created in the Relationship database if it does not exist.
+ *     
+ * Returning JSON data with the Band, Artist, Group (BAG) data;
+ * Current and Past Members
+ * 
+ * Future version will have to decide if on this call or another EndPoint the Band Client
+ * will periodically check if more members have been added to the Band, Artist, Group (BAG)
+ * family tree, cousins, grand parents, etc.
+ * 
+ * If takes less than a second then I want to get children and grandchilden members of the BAG in question
+ * the one that was originally requested by the user.
+ *     
+ *  * Band Tree endpoint is 
+ * https://localhost:7088/wikipedia-page/152447
+ * 
+ * which is then calling the Wikipedia API with
+ * https://en.wikipedia.org/w/api.php?action=parse&pageid=152447&prop=text&format=json
+ */
+app.MapPut("wikipedia-page/{pageid}", async (string pageid, BandDBServices bandController) =>
+{
+    if (!int.TryParse(pageid, out int numericPageId))
+    {
+        // The pageid is not a number
+        return Results.BadRequest();
+        // return Results.NotFound("pageid is not a number");
+        // return Task.FromResult(Results.NotFound("pageid is not a number") as IResult);
+    }
+
+    IActionResult? actionResult = await bandController.GetBandByPageIDAsync(pageid);
+
+    if (actionResult is NotFoundResult)
+    {
+        // The pageid not found in Database
+        return Results.NotFound("no pageid found ");
+    }
+
+    BandModel bandFoundinDB = new BandModel();
+    if (actionResult is OkObjectResult okObjectResult)
+    {
+        bandFoundinDB = okObjectResult.Value as BandModel ?? new BandModel();
+    }
+    else
+    {
+        return Results.NotFound("Wikipedia returns an unknown type.");        // Handle any other unexpected cases
+    }
+
+    var updated = await bandController.UpdateBandAsync(bandFoundinDB);
+
+    return updated ? Results.Ok(bandFoundinDB) : Results.NotFound();
+});
+
+// DB Init Here
+
+// var databaseInitializer = app.Services.GetRequiredService<DatabaseInitializer>();
+// await databaseInitializer.InitializeAsync();
+
 app.MapControllers();
+
+// Middleware registration ENDs here
 
 app.Run();
