@@ -98,6 +98,7 @@ app.MapGet("/wikipedia-search", async (string searchTerm, IHttpClientFactory cli
         var response = await client.GetAsync(wikiApiUrl);
         response.EnsureSuccessStatusCode();
         var data = await response.Content.ReadAsStringAsync();
+
         return Results.Content(data, "application/json");
     }
     catch (HttpRequestException e)
