@@ -11,6 +11,8 @@ using BandTree.Server.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.AspNetCore.Http.Extensions;
+using EdgeDB;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +45,19 @@ builder.Services.AddCors(options =>
                           .AllowAnyHeader()
                           .AllowAnyMethod());
 });
+
+// Register EdgeDBClient
+builder.Services.AddScoped<EdgeDBClient>(serviceProvider =>
+{
+    // Assuming EdgeDBClient takes a connection string or similar parameter
+    var connectionString = builder.Configuration.GetConnectionString("EdgeDB");
+    var connection = EdgeDBConnection.Parse(connectionString);
+    return new EdgeDBClient(connection);
+});
+
+// Register BandDBServices
+builder.Services.AddScoped<IBandDBServices, BandDBServices>(); // Adjust as per your implementation
+
 
 var app = builder.Build();
 
@@ -151,8 +166,16 @@ app.MapGet("/wikipedia-search", async (HttpContext context, string searchTerm, I
  * which is then calling the Wikipedia API with
  * https://en.wikipedia.org/w/api.php?action=parse&pageid=152447&prop=text&format=json
  */
-app.MapPut("wikipedia-page/{pageid}", async (string pageid, BandDBServices bandController) =>
+app.MapPut("wikipedia-page/{pageid}", async (string pageid, HttpContext httpContext) =>
 {
+    // took out of IBandDBServices bandService
+    var bandService = httpContext.RequestServices.GetRequiredService<IBandDBServices>();
+
+    var requestUrl = httpContext.Request.Path;
+    Console.WriteLine($"Received route for URL: {requestUrl}");
+    var displayUrl = httpContext.Request.GetDisplayUrl();
+    Console.WriteLine($"Received URL GetDisplayUrl: {displayUrl}");
+
     if (!int.TryParse(pageid, out int numericPageId))
     {
         // The pageid is not a number
@@ -161,7 +184,7 @@ app.MapPut("wikipedia-page/{pageid}", async (string pageid, BandDBServices bandC
         // return Task.FromResult(Results.NotFound("pageid is not a number") as IResult);
     }
 
-    IActionResult? actionResult = await bandController.GetBandByPageIDAsync(pageid);
+    IActionResult? actionResult = await bandService.GetBandByPageIDAsync(pageid);
 
     if (actionResult is NotFoundResult)
     {
@@ -179,7 +202,7 @@ app.MapPut("wikipedia-page/{pageid}", async (string pageid, BandDBServices bandC
         return Results.NotFound("Wikipedia returns an unknown type.");        // Handle any other unexpected cases
     }
 
-    var updated = await bandController.UpdateBandAsync(bandFoundinDB);
+    var updated = await bandService.UpdateBandAsync(bandFoundinDB);
 
     return updated ? Results.Ok(bandFoundinDB) : Results.NotFound();
 });
@@ -194,3 +217,4 @@ app.MapControllers();
 // Middleware registration ENDs here
 
 app.Run();
+
