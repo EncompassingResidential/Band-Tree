@@ -24,7 +24,7 @@ function App() {
       calling WikipediaSearch here <WikipediaSearch onResultsFetched={handleSearchResults}/>
       <hr />
       <hr />
-      calling SearchWikiResultsList here 19:27 <SearchWikiResultsList searchWikiResults={searchJSONResults} />
+      calling SearchWikiResultsList here 1/03/24 19:27 <SearchWikiResultsList searchWikiResults={searchJSONResults} />
     </div>
   );
 }

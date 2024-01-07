@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Button from 'react-bootstrap/Button'; // https://react-bootstrap.github.io/components/buttons/
+import Table from 'react-bootstrap/Table';  // version 10.2.5 on 1/06/2024
 
 // Wikipedia returns a JSON object with the following structure:
 // But we only send to this Component the "query" object.
@@ -35,41 +37,60 @@ function SearchWikiResultsList({ searchWikiResults }) {
     }
 
     return (
-        <table>
+        <table className="table table-hover">
             <thead>
                 <tr>
                 <th>Page ID</th>
-                <th>Title</th>
+                <th>Page Title: Band, Artist, Group name</th>
                 <th>Snippet</th>
-                <th>timestamp</th>
+                <th>Timestamp</th>
                 </tr>
             </thead>
             <tbody>
                 {searchWikiResults.search && searchWikiResults.search.length > 0 ? 
-                    (  searchWikiResults.search.map((result, arrayindex) => (
-                    <tr key={arrayindex}> {/* Ideally, use a unique identifier instead of index */}
-                    <td>{result.pageid}</td>
-                    <td>{result.title}</td>
-                    <td dangerouslySetInnerHTML={{ __html: result.snippet }}></td>
-                    <td>{result.timestamp}</td>
-                </tr>
-                    ))
-                ) : ( {/* No results found - default rows */}
+                (searchWikiResults.search.map((result, arrayindex) => (
+                    <tr key={arrayindex}>
+                    <td className="threeDCell threeDCellExclude">{result.pageid}</td>
+                    <td className="threeDCell" onClick={() => handlePutRequest(result.pageid)}>{result.title}</td>
+                    <td className="threeDCell" onClick={() => handlePutRequest(result.pageid)} dangerouslySetInnerHTML={{ __html: result.snippet }}></td>
+                    <td className="threeDCell threeDCellExclude">{result.timestamp}</td>
+                    </tr>
+                ))) : (
                     <>
                     <tr>
-                    <td colSpan={4}>     Sigh.</td>
+                    <td colSpan={4} className="threeDCell threeDCellExclude">     Sigh.</td>
                     </tr>
                     <tr>
-                        <td colSpan={4}>No Wikiepedia</td><td>Keep searching for that artist,</td>
+                        <td colSpan={4} className="threeDCell threeDCellExclude">No Wikiepedia</td>
+                        <td className="threeDCell threeDCellExclude">Keep searching for that artist,</td>
                     </tr>
                     <tr>
-						<td colSpan={4}> results found.</td><td>maybe with a different spelling...</td>
+						<td colSpan={4} className="threeDCell threeDCellExclude"> results found.</td>
+                        <td className="threeDCell threeDCellExclude">maybe with a different spelling...</td>
 					</tr>
                     </>
-                        )}
+                )
+                }
             </tbody>
         </table>
     );
 }
+
+const handlePutRequest = async (pageid) => {
+    const putAPIUrl = `https://localhost:7088/wikipedia-page/${pageid}`;
+
+    const response = await fetch(putAPIUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+  
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  
+    // Do something with the response if needed
+};
 
 export default SearchWikiResultsList;

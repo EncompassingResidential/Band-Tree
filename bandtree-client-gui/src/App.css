@@ -36,3 +36,20 @@
     transform: rotate(360deg);
   }
 }
+
+
+/* Created this CSS for Wikipedia search results BootStrap table */
+
+td:not(.threeDCellExclude) {
+  cursor: crosshair;
+}
+
+.threeDCell {
+  background-color: green; 
+  color: yellow;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  border-right: 3px solid #4a4d08;  /* Adjust color as needed */
+  border-bottom: 3px solid #1c3d03; /* Adjust color as needed */
+  box-sizing: border-box;          /* This ensures the border width is included in the elements total width and height */
+}

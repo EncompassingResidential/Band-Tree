@@ -80,7 +80,7 @@ function WikipediaSearch({ onResultsFetched }) {
   return (
     <div>
       <h1>Musician Family Tree Search via ! Wikipedia !</h1>
-      <h2>version Wed, 01/03/2024 15:41</h2>
+      <h2>version Wed, 01/03/2024 15:41 handling response from BandServer initial search results</h2>
       <div>
         <input
           type="text"
