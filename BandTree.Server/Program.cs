@@ -9,8 +9,23 @@
 using BandTree.Server.Services;
 using BandTree.Server.Model;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging.Console;
+using Microsoft.AspNetCore.Http.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure logging to include timestamps
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole(options =>
+{
+    options.FormatterName = ConsoleFormatterNames.Simple;  // Use simple formatter
+}).SetMinimumLevel(LogLevel.Information);
+
+builder.Logging.AddSimpleConsole(options =>
+{
+    options.TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
+    options.IncludeScopes = false;
+});
 
 // Add services to the container.
 
@@ -83,8 +98,15 @@ app.MapGet("/", () =>
  * which is then calling the Wikipedia API with
  * https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=band%20journey&format=json
  */
-app.MapGet("/wikipedia-search", async (string searchTerm, IHttpClientFactory clientFactory) =>
+app.MapGet("/wikipedia-search", async (HttpContext context, string searchTerm, IHttpClientFactory clientFactory) =>
 {
+    /*
+     * If I need to see the URL that was requested, just route or entire URL
+     * var requestUrl = context.Request.Path;
+     * Console.WriteLine($"Received route for URL: {requestUrl}");
+     * var displayUrl = context.Request.GetDisplayUrl();
+     * Console.WriteLine($"Received URL GetDisplayUrl: {displayUrl}");
+     */
     if (string.IsNullOrWhiteSpace(searchTerm))
     {
         return Results.BadRequest("Search term is required.");
