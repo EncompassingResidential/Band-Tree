@@ -166,7 +166,7 @@ app.MapGet("/wikipedia-search", async (HttpContext context, string searchTerm, I
  * which is then calling the Wikipedia API with
  * https://en.wikipedia.org/w/api.php?action=parse&pageid=152447&prop=text&format=json
  */
-app.MapPut("wikipedia-page/{pageid}", async (string pageid, HttpContext httpContext) =>
+app.MapPut("wikipedia-page/{pageid}", async (string pageid, HttpContext httpContext, IHttpClientFactory clientFactory) =>
 {
     // took out of IBandDBServices bandService
     var bandService = httpContext.RequestServices.GetRequiredService<IBandDBServices>();
@@ -186,25 +186,67 @@ app.MapPut("wikipedia-page/{pageid}", async (string pageid, HttpContext httpCont
 
     IActionResult? actionResult = await bandService.GetBandByPageIDAsync(pageid);
 
+    BandModel band = new BandModel();
+
+    // If the pageid / Band is not found in the Band Tree database, then call the Wikipedia API
     if (actionResult is NotFoundResult)
     {
-        // The pageid not found in Database
-        return Results.NotFound("no pageid found ");
-    }
+        var client = clientFactory.CreateClient();
+        // for Rush (band) pageid = 25432
+        //                 https://en.wikipedia.org/w/api.php?action=parse&pageid=  25432 &prop=text&format=json
+        var wikiApiUrl = $"https://en.wikipedia.org/w/api.php?action=parse&pageid={pageid}&prop=text&format=json";
 
-    BandModel bandFoundinDB = new BandModel();
-    if (actionResult is OkObjectResult okObjectResult)
-    {
-        bandFoundinDB = okObjectResult.Value as BandModel ?? new BandModel();
+        // The pageid / Band was not found in Band Tree Database so call Wikipedia API
+        try
+        {
+            var response = await client.GetAsync(wikiApiUrl);
+            response.EnsureSuccessStatusCode();
+            // Chat said data is a JSON string
+            var data = await response.Content.ReadAsStringAsync();
+        }
+        catch (HttpRequestException e)
+        {
+            return Results.Problem($"Error calling Wikipedia API: {e.Message}");
+        }
+
+        // now we have the data from Wikipedia
+        // we need to parse it and get the Band, Artist, Group (BAG) data
+        // and then save it to the database
+
+        BandModel bandFoundinWikipedia = new BandModel();
+        if (actionResult is OkObjectResult okObjectResult)
+        {
+            bandFoundinWikipedia = okObjectResult.Value as BandModel ?? new BandModel();
+        }
+        else
+        {
+            return Results.NotFound("Wikipedia returns an unknown type.");        // Handle any other unexpected cases
+        }
+
+        // Save the Band, Artist, Group (BAG) data to the Band Tree database
+        var updated = await bandService.UpdateBandAsync(bandFoundinWikipedia);
+
     }
     else
     {
-        return Results.NotFound("Wikipedia returns an unknown type.");        // Handle any other unexpected cases
+        if (actionResult is OkObjectResult okObjectResult)
+        {
+            band = okObjectResult.Value as BandModel;
+            // Now you can use 'band'
+        }
+        // the pageid of the Band was found in the Band Tree database
+        // band = (BandModel) actionResult.OkObjectResult.Value ?? new BandModel();
     }
 
-    var updated = await bandService.UpdateBandAsync(bandFoundinDB);
+    /* The pageid was found in the database
+     * or the pageid was found in Wikipedia and saved to the database
+     * 
+     * so return the Current and Past Members
+     */
 
-    return updated ? Results.Ok(bandFoundinDB) : Results.NotFound();
+    // return band.CurrentBandMembers + ' ' + band.PastBandMembers;
+    // how do I return band.PastBandMembers also?
+    return Results.Ok(new { band.CurrentBandMembers, band.PastBandMembers });
 });
 
 // DB Init Here

@@ -15,19 +15,24 @@ namespace BandTree.Server.Services
 
         public async Task<IActionResult?> GetBandByPageIDAsync(string pageid)
         {
-            var result = await _EdgeDBclient.QueryAsync<BandModel>(
-                "SELECT * " +
-                " FROM Bands " +
-                " WHERE Isbn = @Isbn LIMIT 1",
-                new { pageid = pageid });
+            var pageidInt = Int32.Parse(pageid);
+            Console.WriteLine("SELECT BandModel " +
+                " { title, currentmembers, pastmembers, genres, labels, wikipediapageid, wikipediapagetimestamp, id } " +
+                $" FILTER .wikipediapageid = @{pageid} LIMIT 1");
+            // EdgeDB ChatGPT said QuerySingleOrDefaultAsync existed.
+            // exists QuerySingleAsync returns result or null
+            var result = await _EdgeDBclient.QuerySingleAsync<BandModel>(
+                "SELECT BandModel " +
+                " { title, currentmembers, pastmembers, genres, labels, wikipediapageid, wikipediapagetimestamp, id } " +
+                " FILTER .wikipediapageid = <int32>$pageid LIMIT 1",
+                new { pageid = pageidInt  });
 
-            var band = result.FirstOrDefault();
-            if (band is null)
+            if (result is null)
             {
                 return new NotFoundResult();
             }
 
-            return new OkObjectResult(band);
+            return new OkObjectResult(result);
         }
 
         public async Task<bool> UpdateBandAsync(BandModel band)

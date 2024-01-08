@@ -47,7 +47,7 @@ namespace BandTree.Server.Model
         public string ArtistName { get; set; } = string.Empty;
 
         [JsonPropertyName("name")]
-        [EdgeDBProperty("artistname")]
+        [EdgeDBProperty("othernames")]
         public List<string>? OtherNames { get; set; }
 
         [JsonPropertyName("pageid")]
