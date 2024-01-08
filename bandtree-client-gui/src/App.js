@@ -1,25 +1,30 @@
 import logo from './logo.svg';
 import './App.css';
+import React, { useState } from 'react';
 import WikipediaSearch from './BandTree_Client_WikipediaSearch';
+import SearchWikiResultsList from './SearchWikiResultsList';
 
 function App() {
+  const [searchJSONResults, setSearchResults] = useState([]);
+
+  const handleSearchResults = (data) => {
+    setSearchResults(data);
+  };
+
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
+        <img src=".\3d-force-graph example 3D graph - detail.png" className="Band-Tree" alt="3D Graph John" />
+        <p>This is the Band Tree Client
+        <br />
+          John learning React again, here it is 1/02/2024 14:52
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React John again here it is 1/02/2024 14:52
-        </a>
-        John Text @ 15:16 <WikipediaSearch />
       </header>
+      <hr />
+      calling WikipediaSearch here <WikipediaSearch onResultsFetched={handleSearchResults}/>
+      <hr />
+      <hr />
+      calling SearchWikiResultsList here 1/03/24 19:27 <SearchWikiResultsList searchWikiResults={searchJSONResults} />
     </div>
   );
 }

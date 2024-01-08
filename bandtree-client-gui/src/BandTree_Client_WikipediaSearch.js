@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 
-function WikipediaSearch() {
+function WikipediaSearch({ onResultsFetched }) {
   const [searchTerm, setSearchTerm]           = useState('');
   const [results, setResults]                 = useState('');
   const [isLoading, setIsLoading]             = useState(false);
   const [error, setError]                     = useState(null);
   const [displayedApiUrl, setDisplayedApiUrl] = useState('');
+  const [showJSONResults, setShowResults]     = useState(false);
 
   const handleSearch = () => {
     if (!searchTerm) {
@@ -24,7 +25,7 @@ function WikipediaSearch() {
     setIsLoading(true);
 
     fetch(apiUrl, {
-      method: 'PUT', // Specify the HTTP method as PUT
+      method: 'GET', // Specify the HTTP method as GET since no data on the server is being modified
       headers: {
         'Content-Type': 'application/json', // Set the content type if you are sending JSON data
         // Add any other headers as needed
@@ -41,6 +42,8 @@ function WikipediaSearch() {
       .then((data) => {
         // Display the raw JSON response in the results text field
         setResults(JSON.stringify(data, null, 2));
+        // After fetching data:
+        onResultsFetched(data.query);
         // Indicate that the request is complete
         setIsLoading(false);
         setError(null); // Clear any previous errors
@@ -69,10 +72,15 @@ function WikipediaSearch() {
       });
   };
 
+  const toggleResultsVisibility = () => {
+    setShowResults(!showJSONResults); // Toggle between true and false
+  };
+  
+
   return (
     <div>
       <h1>Musician Family Tree Search via ! Wikipedia !</h1>
-      <h2>version 1/02/2024 18:44</h2>
+      <h2>version Wed, 01/03/2024 15:41 handling response from BandServer initial search results</h2>
       <div>
         <input
           type="text"
@@ -90,11 +98,14 @@ function WikipediaSearch() {
                <code>{displayedApiUrl}</code>
             </p>
           )}
+          <button onClick={toggleResultsVisibility}>
+            {showJSONResults ? "Hide JSON Search Results" : "Show JSON Search Results"}
+          </button>
           {isLoading ? (
             <p>Loading...</p>
           ) : error ? (
             <p>{error}</p>
-          ) : (
+          ) : showJSONResults && (
             <>
               <h2>Raw JSON Results via Band Server from Wikipedia</h2>
               <textarea
