@@ -8,6 +8,7 @@
 BandTree\.Cache/
 # I juse renamed directory to have an underscore instead of a dot.
 BandTree_Cache/
+EdgeDB_backups/
 *.lnk
 Log*.txt
 
