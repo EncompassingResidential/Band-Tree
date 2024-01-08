@@ -1,2 +1,6 @@
 [edgedb]
 server-version = "4.4"
+database = "Band_Tree_DB"
+
+[project]
+schema-dir = "dbschema"
