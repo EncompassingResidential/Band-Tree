@@ -146,7 +146,7 @@ app.MapGet("/wikipedia-search", async (HttpContext context, string searchTerm, I
 
 
 /* 
- * PUT  Get the Band, Artist, Group (BAG) Wikiepedia Page
+ * PUT  Get the Band, Artist, Group (BAG) Wikipedia Page
  *     using a PUT 
  *     because the Artist will be created in the Relationship database if it does not exist.
  *     
@@ -168,7 +168,6 @@ app.MapGet("/wikipedia-search", async (HttpContext context, string searchTerm, I
  */
 app.MapPut("wikipedia-page/{pageid}", async (string pageid, HttpContext httpContext, IHttpClientFactory clientFactory) =>
 {
-    // took out of IBandDBServices bandService
     var bandService = httpContext.RequestServices.GetRequiredService<IBandDBServices>();
 
     var requestUrl = httpContext.Request.Path;
@@ -176,77 +175,131 @@ app.MapPut("wikipedia-page/{pageid}", async (string pageid, HttpContext httpCont
     var displayUrl = httpContext.Request.GetDisplayUrl();
     Console.WriteLine($"Received URL GetDisplayUrl: {displayUrl}");
 
+    /*
+     * I didn't think of this until 1/08/24
+     * This code at this point doesn't distinguish between a Band, Artist, Group (BAG) pageid
+     * so after I get the Wikipedia data I have to check if it is a Band, Artist, Group (BAG) pageid
+     */
     if (!int.TryParse(pageid, out int numericPageId))
     {
-        // The pageid is not a number
-        return Results.BadRequest();
-        // return Results.NotFound("pageid is not a number");
-        // return Task.FromResult(Results.NotFound("pageid is not a number") as IResult);
+        return Results.BadRequest($"The Wikipedia identifier, pageid {pageid} is not a number");
     }
 
-    IActionResult? actionResult = await bandService.GetBandByPageIDAsync(pageid);
+    // This call is specifically for BandModel
+    IActionResult? actionResult = await bandService.GetBandByPageIDAsync(int.Parse(pageid));
 
     BandModel band = new BandModel();
 
-    // If the pageid / Band is not found in the Band Tree database, then call the Wikipedia API
-    if (actionResult is NotFoundResult)
+    if (actionResult is OkObjectResult okObjectResult)
+    {
+        band = okObjectResult.Value as BandModel ?? new BandModel();
+    }
+
+    string WikipediaData = string.Empty;
+    BandModelProcessor bandModelProcessor = new BandModelProcessor();
+
+    // Band pageid was not found in the Band Tree database
+    if (band is BandModel 
+        && ( string.IsNullOrEmpty(band.Title) || band.WikipediaPageID == 0))
     {
         var client = clientFactory.CreateClient();
         // for Rush (band) pageid = 25432
         //                 https://en.wikipedia.org/w/api.php?action=parse&pageid=  25432 &prop=text&format=json
         var wikiApiUrl = $"https://en.wikipedia.org/w/api.php?action=parse&pageid={pageid}&prop=text&format=json";
 
-        // The pageid / Band was not found in Band Tree Database so call Wikipedia API
+        // The Band pageid was not found in Band Tree Database so call Wikipedia API
         try
         {
             var response = await client.GetAsync(wikiApiUrl);
             response.EnsureSuccessStatusCode();
             // Chat said data is a JSON string
-            var data = await response.Content.ReadAsStringAsync();
+            WikipediaData = await response.Content.ReadAsStringAsync();
+
+            /*
+             * now we have the JSON data from Wikipedia
+             * we need to parse it and get the Band, Artist, Group (BAG) data
+             * Version 1 - title, current members, past members, Genres, Labels, page Timestamp
+             * and then save it to the database
+             */
+            band = bandModelProcessor.FromJson(WikipediaData);
+            band.Title = "John Testing Title";
+            band.WikipediaPageID = int.Parse(pageid);
+            band.PageTimeStamp = DateTimeOffset.Now;
+            band.PastBandMembers = new List<Artist>();
+            band.CurrentBandMembers = new List<Artist>();
+            band.CompanyLabelList = new List<MusicCompanyLabel>();
+            band.GenreList = new List<Genre>();
+            band.CompanyLabelList.Add(new MusicCompanyLabel { LabelName = "John Testing Label" });
+            band.GenreList.Add(new Genre { GenreName = "John Testing Genre 1" }); 
+            band.PastBandMembers.Add(new Artist { ArtistName = "Captain Caveman and the Teen Angels", WikipediaPageID = 999999, GenreList = new List<Genre>(), PageTimeStamp = DateTimeOffset.Now });
+            band.PastBandMembers.Add(new Artist { ArtistName = "John Testing Artist 2", WikipediaPageID = 99999999, GenreList = new List<Genre>(), PageTimeStamp = DateTimeOffset.Now });
+            band.CurrentBandMembers.Add( new Artist { ArtistName = "John Testing Artist 3", WikipediaPageID = 88888888, GenreList = new List<Genre>(), PageTimeStamp = DateTimeOffset.Now } );
+            band.CurrentBandMembers.Add(new Artist { ArtistName = "John Testing Artist 4", WikipediaPageID = 77777777, GenreList = new List<Genre>(), PageTimeStamp = DateTimeOffset.Now } );
+            band.PastBandMembers[0].GenreList.Add(new Genre { GenreName = "John Testing Genre 2" });
+            band.PastBandMembers[1].GenreList.Add(new Genre { GenreName = "John Testing Genre 3" });
+            band.CurrentBandMembers[0].GenreList.Add(new Genre { GenreName = "John Testing Genre 4" });
+            band.CurrentBandMembers[1].GenreList.Add(new Genre { GenreName = "John Testing Genre 5" });
+
+            // Save the Band, Artist, Group (BAG) data to the Band Tree database
+            var updated = await bandService.UpdateBandAsync(band);
         }
         catch (HttpRequestException e)
         {
-            return Results.Problem($"Error calling Wikipedia API: {e.Message}");
+            return Results.Problem($"No BAG in the Database and Error calling Wikipedia API: {e.Message}");
         }
-
-        // now we have the data from Wikipedia
-        // we need to parse it and get the Band, Artist, Group (BAG) data
-        // and then save it to the database
-
-        BandModel bandFoundinWikipedia = new BandModel();
-        if (actionResult is OkObjectResult okObjectResult)
-        {
-            bandFoundinWikipedia = okObjectResult.Value as BandModel ?? new BandModel();
-        }
-        else
-        {
-            return Results.NotFound("Wikipedia returns an unknown type.");        // Handle any other unexpected cases
-        }
-
-        // Save the Band, Artist, Group (BAG) data to the Band Tree database
-        var updated = await bandService.UpdateBandAsync(bandFoundinWikipedia);
-
-    }
-    else
-    {
-        if (actionResult is OkObjectResult okObjectResult)
-        {
-            band = okObjectResult.Value as BandModel;
-            // Now you can use 'band'
-        }
-        // the pageid of the Band was found in the Band Tree database
-        // band = (BandModel) actionResult.OkObjectResult.Value ?? new BandModel();
     }
 
-    /* The pageid was found in the database
+    /*
+     * The Band pageid was found in the database
      * or the pageid was found in Wikipedia and saved to the database
      * 
-     * so return the Current and Past Members
+     * return the Current and Past Members
+     *
+     * thinking out loud:
+     * this return will not be the BandModel
+     * 
+     * this return needs to be a new model that has the Current and Past Members
+     *   New Model:
+     *   current members (1 Artist)
+     *   past members    (List of Artists)
+     *   I also return the pageid of the current and past members
+     *   
+     *   Minimum to return now is:
+     *   current Artist - name, pageid
+     *   past Artists   - List of name, pageid
+     *   
+     *   Easiest might be to return the Artist Model serialized.
+     *   But then BandClient will know how Database stores things.
+     *   But not really, it will just know how the Band Tree Server returns things.
+     * 
+     * This is where I have to decide if I want to 
+     * get the children and grandchilden members of the BAG in question
+     * And if not how will BandClient know to get them at a future time / call?
+     * The chunking question.
+     * 
+     * There is this current PUT call which is (wikipedia-page/{pageid}):
+     *   User - I have a BAG pageid
+     *   Server - I have that BAG's current and past members
+     *   
+     *   User - I have 1st level current members (Artists).
+     *          Now I want to see the 2nd level Artists which you sent back to me as past members.
+     *          In future this could also be producers, other artists found on the BAG's page.
+     *          
+     *          Those past Band members will have current and past members 
+     *          the 2nd level Artists have current and past members
+     *          The 2nd level Artists have current Artists which are 2nd level Artists
+     *          The 2nd level Artists have past member Artists which are 3rd level Artists
+     *          etc.
+     *          
+     *   This next call from the BandClient will be a GET call
+     *   for the 2nd level Artists which are past members of the BAG
+     *   it will be wiki
+     *   
+     *   Maybe when I return the current members and past members 
+     *   I also return the pageid of the current and past members
+     *   and I start a process to go find 1, 2, 3 or more levels of children and grandchildren
      */
-
-    // return band.CurrentBandMembers + ' ' + band.PastBandMembers;
-    // how do I return band.PastBandMembers also?
-    return Results.Ok(new { band.CurrentBandMembers, band.PastBandMembers });
+    return Results.Ok(bandModelProcessor.ToJson(band));
 });
 
 // DB Init Here

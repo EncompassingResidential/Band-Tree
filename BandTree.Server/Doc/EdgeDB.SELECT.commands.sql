@@ -24,7 +24,10 @@ SELECT BandModel { title, currentmembers, pastmembers, genres, labels, wikipedia
 SELECT 'About to run SELECT with a WHERE / FILTER for Rush\'s wikipediapageid : 25432 - @ ' ++ <str>std::datetime_current();
 
 SELECT BandModel { title, currentmembers, pastmembers, genres, labels, wikipediapageid, wikipediapagetimestamp, id } FILTER .wikipediapageid = 25432 LIMIT 3;
-SELECT 'AFTER SELECT with a WHERE / FILTER for Rush\'s wikipediapageid : 25432 - @ ' ++ <str>std::datetime_current();
+SELECT 'AFTER SELECT with a WHERE / FILTER for Rushs wikipediapageid : 25432 - @ ' ++ <str>std::datetime_current();
+
+SELECT "SELECT DeleteMeTable { title, wikipediapageid, wikipediapagetimestamp, id } ;";
+SELECT DeleteMeTable { title, wikipediapageid, wikipediapagetimestamp, id } ;
 
 SELECT '  End of script date and time  ' ++ <str>std::datetime_current();
 COMMIT;

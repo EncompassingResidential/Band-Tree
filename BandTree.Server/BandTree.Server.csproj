@@ -4,6 +4,24 @@
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+	  <!--  Semantic versioning example 2.1.7.34
+Major Version ( 2): Indicates a major release of the software, 
+                    which often includes significant changes, new features,
+					or changes that are not backward compatible.
+Minor Version ( 1): Represents a minor release that might include smaller new features 
+                    or significant improvements, typically backward compatible within the same major version.
+Patch Version ( 7): Used for bug fixes, security patches, and minor improvements, 
+                    usually within the same minor version. These changes are backward compatible.
+Build Number or
+Revision Number (34): Often represents the build or revision of the software. 
+                      This number may increment with each build of the software, 
+				      regardless of changes in features or bug fixes. 
+					  In some systems, this can also represent more granular 
+					  updates or metadata about the build environment or process.
+
+I'm going to update Major Version when I release the software to the public.
+	  -->
+	<Version>0.2.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

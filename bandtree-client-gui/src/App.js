@@ -1,4 +1,3 @@
-import logo from './logo.svg';
 import './App.css';
 import React, { useState } from 'react';
 import WikipediaSearch from './BandTree_Client_WikipediaSearch';
@@ -14,7 +13,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src=".\3d-force-graph example 3D graph - detail.png" className="Band-Tree" alt="3D Graph John" />
+        <img src=".\threeD-force-graph example 3D graph - detail.png" className="Band-Tree" alt="3D Graph John" />
         <p>This is the Band Tree Client
         <br />
           John learning React again, here it is 1/02/2024 14:52
