@@ -12,7 +12,7 @@ namespace BandTree.Server.Model
 
         [JsonPropertyName("pageid")]
         [EdgeDBProperty("wikipediapageid")]
-        public string WikipediaPageID { get; set; } = string.Empty;
+        public int WikipediaPageID { get; set; } = 0;
 
 
         [JsonPropertyName("currentmembers")]
@@ -42,17 +42,17 @@ namespace BandTree.Server.Model
     [EdgeDBType]
     public class Artist
     {
-        [JsonPropertyName("name")]
+        [JsonPropertyName("artistname")]
         [EdgeDBProperty("artistname")]
         public string ArtistName { get; set; } = string.Empty;
 
-        [JsonPropertyName("name")]
+        [JsonPropertyName("othernames")]
         [EdgeDBProperty("othernames")]
         public List<string>? OtherNames { get; set; }
 
         [JsonPropertyName("pageid")]
         [EdgeDBProperty("wikipediapageid")]
-        public string WikipediaPageID { get; set; } = string.Empty;
+        public int WikipediaPageID { get; set; } = 0;
 
         [JsonPropertyName("birthdate")]
         [EdgeDBProperty("birthdate")]
@@ -85,7 +85,7 @@ namespace BandTree.Server.Model
 
         [JsonPropertyName("pageid")]
         [EdgeDBProperty("wikipediapageid")]
-        public string WikipediaPageID { get; set; } = string.Empty;
+        public int WikipediaPageID { get; set; } = 0;
 
         [JsonPropertyName("timestamp")]
         [EdgeDBProperty("timestamp")]
@@ -101,7 +101,7 @@ namespace BandTree.Server.Model
 
         [JsonPropertyName("pageid")]
         [EdgeDBProperty("wikipediapageid")]
-        public string WikipediaPageID { get; set; } = string.Empty;
+        public int WikipediaPageID { get; set; } = 0;
 
         [JsonPropertyName("foundingdate")]
         [EdgeDBProperty("foundingdate")]
